@@ -10,7 +10,7 @@ struct guidelines {
 };
 
 // Expects image to RGBA 8 bits per pixel std::vector
-// of size width * height * 8 * 4
+// of size width * height * 4
 // If startX or startY are out of bounds they are forced to be within them
 guidelines process(std::vector<unsigned char> &image,
                    unsigned width, unsigned height,
@@ -113,6 +113,7 @@ guidelines process(std::vector<unsigned char> &image,
   return output;
 }
 
+// Convenience function to start processing from center
 guidelines processFromCenter(std::vector<unsigned char> &image,
                              unsigned width, unsigned height,
                              bool fluidWidth = false,
@@ -120,6 +121,36 @@ guidelines processFromCenter(std::vector<unsigned char> &image,
 {
   return process(image, width, height, width / 2, height / 2, 
                  fluidWidth, fluidHeight);
+}
+
+
+// Copies part of the source image to target starting from {fromX, fromY}
+// with specified height and width.
+// Doesn't check the size of source vector.
+void copyImagePart(std::vector<unsigned char> &source, unsigned sourceWidth,
+                   std::vector<unsigned char> &target,
+                   unsigned width, unsigned height,
+                   unsigned fromX = 0, unsigned fromY = 0)
+{
+  // Assume RGBA 8 bits per pixel
+  target.resize(width * height * 4);
+
+  // Index for target array
+  unsigned i = -1, j = 0;
+
+  // It's faster to have y on outer loop because of cache hits
+  for(unsigned y = fromY; y < fromY + height; ++y)
+  {
+    for(unsigned x = fromX; x < fromX + width; ++x)
+    {
+      j = (y * sourceWidth + x) * 4;
+      // I know that loops exist but it's faster that way
+      target[++i] = source[j];
+      target[++i] = source[++j];
+      target[++i] = source[++j];
+      target[++i] = source[++j];
+    }
+  }
 }
 
 } // end namespace rain

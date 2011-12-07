@@ -37,6 +37,16 @@ int main (int argc, const char * argv[])
     "right: " << result.right << "\n" <<
     "left: " << result.left << "\n" <<
     "bottom: " << result.bottom << "\n";
+
+    std::vector<unsigned char> topLeft;
+    rain::copyImagePart(image, decoder.getWidth(), topLeft, result.left, result.top);
+    LodePNG::Encoder encoder;
+    encoder.getSettings().zlibsettings.windowSize = 2048;
+
+    //encode and save
+    std::vector<unsigned char> ob;
+    encoder.encode(ob, topLeft.empty() ? 0 : &topLeft[0], result.left, result.top);
+    LodePNG::saveFile(ob, "top-left.png");
   }
 }
     // std::cout << "\n" <<
