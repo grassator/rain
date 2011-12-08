@@ -11,8 +11,22 @@
 #include "lodepng.h"
 #include "guidelines.h"
 
+void saveImage(std::vector<unsigned char> &image,
+               unsigned width, unsigned height,
+               std::string filename)
+{
+  // Creating encoder
+  LodePNG::Encoder encoder;
+  encoder.getSettings().zlibsettings.windowSize = 2048;
+
+  // Encode and save
+  std::vector<unsigned char> ob;
+  encoder.encode(ob, image.empty() ? 0 : &image[0], width, height);
+  LodePNG::saveFile(ob, filename);
+}
+
 void saveMinimized(rain::guidelines guides, std::vector<unsigned char> &image,
-                   unsigned width, unsigned height)
+                   unsigned width, unsigned height, std::string filename)
 {
   unsigned outputWidth = guides.left + guides.right + 1;
   unsigned outputHeight = guides.top + guides.bottom + 1;
@@ -21,98 +35,31 @@ void saveMinimized(rain::guidelines guides, std::vector<unsigned char> &image,
   std::vector<unsigned char> minimized;
   minimized.resize(outputWidth * outputHeight * 4);
 
-  // North-west
-  rain::copyImagePart(
-    image, width,
-    minimized, outputWidth,
-    guides.left, guides.top,
-    0, 0, 0, 0
-  );
+  unsigned sizeX[3] = { guides.left,  1,            guides.right           };
+  unsigned sizeY[3] = { guides.top,   1,            guides.bottom          };
+  unsigned fromX[3] = { 0,            guides.left,  width - guides.right   };
+  unsigned fromY[3] = { 0,            guides.top,   height - guides.bottom };
+  unsigned toX[3]   = { 0,            guides.left,  guides.left + 1        };
+  unsigned toY[3]   = { 0,            guides.top,   guides.top + 1         };
 
-  // North
-  rain::copyImagePart(
-    image, width,
-    minimized, outputWidth,
-    1, guides.top,
-    guides.left, 0,
-    guides.left, 0
-  );
+  for(char x = 0; x < 3; ++x)
+  {
+    for(char y = 0; y < 3; ++y)
+    {
+      rain::copyImagePart(
+        image, width,
+        minimized, outputWidth,
+        sizeX[x], sizeY[y],
+        fromX[x], fromY[y],
+        toX[x], toY[y]
+      );
+    }
+  }
 
-  // North-east
-  rain::copyImagePart(
-    image, width,
-    minimized, outputWidth,
-    guides.right, guides.top,
-    width - guides.right, 0,
-    guides.left + 1, 0
-  );
-
-  // West
-  rain::copyImagePart(
-    image, width,
-    minimized, outputWidth,
-    guides.left, 1,
-    0, guides.top,
-    0, guides.top
-  );
-
-  // Center
-  rain::copyImagePart(
-    image, width,
-    minimized, outputWidth,
-    1, 1,
-    guides.left, guides.top,
-    guides.left, guides.top
-  );
-
-  // East
-  rain::copyImagePart(
-    image, width,
-    minimized, outputWidth,
-    guides.right, 1,
-    width - guides.right, guides.top,
-    guides.left + 1, guides.top
-  );
-
-  // South-west
-  rain::copyImagePart(
-    image, width,
-    minimized, outputWidth,
-    guides.left, guides.bottom,
-    0, height - guides.bottom,
-    0, guides.top + 1
-  );
-
-  // South
-  rain::copyImagePart(
-    image, width,
-    minimized, outputWidth,
-    1, guides.bottom,
-    guides.left, height - guides.bottom,
-    guides.left, guides.top + 1
-  );
-
-  // South-east
-  rain::copyImagePart(
-    image, width,
-    minimized, outputWidth,
-    guides.right, guides.bottom,
-    width - guides.right, height - guides.bottom,
-    guides.left + 1, guides.top + 1
-  );
-
-
-
-
-  // Output file
-  LodePNG::Encoder encoder;
-  encoder.getSettings().zlibsettings.windowSize = 2048;
-
-  //encode and save
-  std::vector<unsigned char> ob;
-  encoder.encode(ob, &minimized[0], outputWidth, outputHeight);
-  LodePNG::saveFile(ob, "minimized.png");
+  saveImage(minimized, outputWidth, outputHeight, filename);
 }
+
+
 
 int main (int argc, const char * argv[])
 {
@@ -140,7 +87,7 @@ int main (int argc, const char * argv[])
     "left: " << result.left << "\n" <<
     "bottom: " << result.bottom << "\n";
 
-    saveMinimized(result, image, decoder.getWidth(), decoder.getHeight());
+    saveMinimized(result, image, decoder.getWidth(), decoder.getHeight(), "min.png");
   }
 }
     // std::cout << "\n" <<
