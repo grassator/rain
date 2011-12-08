@@ -11,11 +11,11 @@ endif
 OBJECTS = main.o lodepng.o
 
 all: $(OBJECTS)
-	$(CPP) $(OBJECTS) $(CPPFLAGS) -o build/rain
+	$(CPP) $(OBJECTS) $(CPPFLAGS) -o rain
 
 %.o:
 	$(CPP) $(@:.o=.cpp) $(CPPFLAGS) -c
 
 clean:
-	rm -rf $(BUILDDIR)/rain $(BUILDDIR)/*.o
+	rm rain *.o
 
