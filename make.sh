@@ -1,1 +1,1 @@
-clang++ main.cpp lodepng.cpp -O3 -o build/rain
+clang++ main.cpp lodepng.cpp -O2 -o build/rain

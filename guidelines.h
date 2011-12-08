@@ -128,24 +128,20 @@ guidelines processFromCenter(std::vector<unsigned char> &image,
 // with specified height and width.
 // Doesn't check the size of source vector.
 void copyImagePart(std::vector<unsigned char> &source, unsigned sourceWidth,
-                   std::vector<unsigned char> &target,
+                   std::vector<unsigned char> &target, unsigned targetWidth,
                    unsigned width, unsigned height,
-                   unsigned fromX = 0, unsigned fromY = 0)
+                   unsigned sourceX = 0, unsigned sourceY = 0,
+                   unsigned targetX = 0, unsigned targetY = 0)
 {
-  // Assume RGBA 8 bits per pixel
-  target.resize(width * height * 4);
-
-  // Index for target array
-  unsigned i = -1, j = 0;
-
   // It's faster to have y on outer loop because of cache hits
-  for(unsigned y = fromY; y < fromY + height; ++y)
+  for(unsigned y = sourceY; y < sourceY + height; ++y)
   {
-    for(unsigned x = fromX; x < fromX + width; ++x)
+    for(unsigned x = sourceX; x < sourceX + width; ++x)
     {
-      j = (y * sourceWidth + x) * 4;
+      unsigned i = ((targetY + y - sourceY) * targetWidth + targetX + x - sourceX) * 4;
+      unsigned j = (y * sourceWidth + x) * 4;
       // I know that loops exist but it's faster that way
-      target[++i] = source[j];
+      target[i] = source[j];
       target[++i] = source[++j];
       target[++i] = source[++j];
       target[++i] = source[++j];
