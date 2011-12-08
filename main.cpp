@@ -7,7 +7,9 @@
 //
 
 #include <iostream>
+#include <sstream>
 #include <iomanip>
+#include <libgen.h>
 #include "lodepng.h"
 #include "guidelines.h"
 
@@ -16,6 +18,31 @@ enum direction {
   VERTICAL
 };
 
+// Very basic implmentation that takes any path and returns
+// last path component without extension
+std::string basenameWithoutExtension(std::string filename)
+{
+  // Getting filename from path
+  char delimiters[3] = { '/', '\\', ':' };
+  for(char i = 0; i < 3; ++i)
+  {
+    size_t pos = filename.rfind('/');
+    if(pos != std::string::npos)
+    {
+      filename = filename.substr(pos + 1);
+    }
+  }
+
+  // Removing extension
+  size_t pos = filename.rfind('.');
+  if(!(pos == std::string::npos || pos == 0))
+  {
+    filename = filename.substr(0, pos);
+  }
+  return filename;
+}
+
+// Writes raw image data to PNG file
 void saveImage(std::vector<unsigned char> &image,
                unsigned width, unsigned height,
                std::string filename)
@@ -30,6 +57,8 @@ void saveImage(std::vector<unsigned char> &image,
   LodePNG::saveFile(ob, filename);
 }
 
+// Creates minimized version of image based on guides
+// to be used as border-image in css
 void saveMinimized(rain::guidelines guides, std::vector<unsigned char> &image,
                    unsigned width, unsigned height, std::string filename)
 {
@@ -143,11 +172,20 @@ void saveThreePart(rain::guidelines guides, std::vector<unsigned char> &image,
   }
 }
 
-
+// There are libraries to parse JSON for all languages and it's human readable
+std::string jsonFromGuidelines(rain::guidelines guides)
+{
+  std::ostringstream json;
+  json << '{' << "\"top\":"    << guides.top    << ',' <<
+                 "\"right\":"  << guides.right  << ',' <<
+                 "\"bottom\":" << guides.bottom << ',' <<
+                 "\"left\":"   << guides.left   << '}';
+  return json.str();
+}
 
 int main (int argc, const char * argv[])
 {
-  const char* filename = argc > 1 ? argv[1] : "test.png";
+  std::string filename = argc > 1 ? argv[1] : "/Users/grassator/Desktop/rain/repo/build/test.png";
   
   std::vector<unsigned char> buffer, image;
   LodePNG::loadFile(buffer, filename); //load the image file with given filename
@@ -162,26 +200,11 @@ int main (int argc, const char * argv[])
   }
   else
   {
-    rain::guidelines result = rain::processFromCenter(
+    rain::guidelines guides = rain::processFromCenter(
       image, decoder.getWidth(), decoder.getHeight(), true, true
     );
-    std::cout << 
-    "top: " << result.top << "\n" <<
-    "right: " << result.right << "\n" <<
-    "left: " << result.left << "\n" <<
-    "bottom: " << result.bottom << "\n";
-
-    saveNinePart(
-      result, image, decoder.getWidth(), decoder.getHeight(), "nine-part"
-    );
+    std::cout << jsonFromGuidelines(guides) << "\n";
   }
 }
-    // std::cout << "\n" <<
-    // "w: " << decoder.getWidth() << "\n" <<
-    // "h: " << decoder.getHeight() << "\n" <<
-    // "bitDepth: " << decoder.getInfoPng().color.bitDepth << "\n" <<
-    // "bpp: " << decoder.getBpp() << "\n" <<
-    // "colorChannels: " << decoder.getChannels() << "\n" <<
-    // "paletteSize: " << decoder.getInfoPng().color.palettesize / 4 << "\n" <<
-    // "colorType: " << decoder.getInfoPng().color.colorType << "\n";
+
 
