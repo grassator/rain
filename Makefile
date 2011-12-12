@@ -13,9 +13,12 @@ OBJECTS = main.o lodepng.o
 all: $(OBJECTS)
 	$(CPP) $(OBJECTS) $(CPPFLAGS) -o rain
 
-%.o:
-	$(CPP) $(@:.o=.cpp) $(CPPFLAGS) -c
+main.o:
+	$(CPP) main.cpp $(CPPFLAGS) -c
+
+lodepng.o:
+	$(CPP) lodepng.cpp $(CPPFLAGS) -c
 
 clean:
-	rm rain *.o
+	rm -rf rain *.o
 
