@@ -2,6 +2,7 @@
 #define RAIN_FUNCTIONS_H
 
 #include "guidelines.h"
+#include "lodepng.h"
 
 namespace rain {
 
