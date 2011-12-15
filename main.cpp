@@ -1,6 +1,5 @@
 //
 //  main.cpp
-//  rain
 //
 //  Created by Dmitriy Kubyshkin on 12/7/11.
 //  Copyright (c) 2011 Dmitriy Kubyshkin. All rights reserved.
@@ -8,7 +7,6 @@
 
 #include <iostream>
 #include <sstream>
-#include <iomanip>
 #include <libgen.h>
 #include "lodepng.h"
 #include "guidelines.h"
@@ -185,7 +183,7 @@ std::string jsonFromGuidelines(rain::guidelines guides)
 
 int main (int argc, const char * argv[])
 {
-  std::string filename = argc > 1 ? argv[1] : "/Users/grassator/Desktop/rain/repo/build/test.png";
+  std::string filename = argc > 1 ? argv[1] : "test.png";
   
   std::vector<unsigned char> buffer, image;
   LodePNG::loadFile(buffer, filename); //load the image file with given filename

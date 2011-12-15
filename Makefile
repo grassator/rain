@@ -10,15 +10,14 @@ endif
 
 OBJECTS = main.o lodepng.o
 
-all: $(OBJECTS)
+all: rain
+
+rain: $(OBJECTS)
 	$(CPP) $(OBJECTS) $(CPPFLAGS) -o rain
 
-main.o:
-	$(CPP) main.cpp $(CPPFLAGS) -c
-
-lodepng.o:
-	$(CPP) lodepng.cpp $(CPPFLAGS) -c
+%.o: %.cpp Makefile
+	$(CPP) $(@:.o=.cpp) $(CPPFLAGS) -c
 
 clean:
-	rm -rf rain *.o
+	rm -f rain *.o
 
