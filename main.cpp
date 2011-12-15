@@ -6,9 +6,9 @@
 //
 
 #include <iostream>
-#include <sstream>
 #include <libgen.h>
 #include "lodepng.h"
+#include "functions.h"
 #include "guidelines.h"
 
 enum direction {
@@ -41,9 +41,8 @@ std::string basenameWithoutExtension(std::string filename)
 }
 
 // Writes raw image data to PNG file
-void saveImage(std::vector<unsigned char> &image,
-               unsigned width, unsigned height,
-               std::string filename)
+void saveImage(std::vector<unsigned char> &image, unsigned width, 
+               unsigned height, std::string filename)
 {
   // Creating encoder
   LodePNG::Encoder encoder;
@@ -60,19 +59,19 @@ void saveImage(std::vector<unsigned char> &image,
 void saveMinimized(rain::guidelines guides, std::vector<unsigned char> &image,
                    unsigned width, unsigned height, std::string filename)
 {
-  unsigned outputWidth = guides.left + guides.right + 1;
-  unsigned outputHeight = guides.top + guides.bottom + 1;
+  unsigned outputWidth = guides.getLeft() + guides.getRight() + 1;
+  unsigned outputHeight = guides.getTop() + guides.getBottom() + 1;
 
   // Preparing image output
   std::vector<unsigned char> minimized;
   minimized.resize(outputWidth * outputHeight * 4);
 
-  unsigned sizeX[3] = { guides.left,  1,            guides.right           };
-  unsigned sizeY[3] = { guides.top,   1,            guides.bottom          };
-  unsigned fromX[3] = { 0,            guides.left,  width - guides.right   };
-  unsigned fromY[3] = { 0,            guides.top,   height - guides.bottom };
-  unsigned toX[3]   = { 0,            guides.left,  guides.left + 1        };
-  unsigned toY[3]   = { 0,            guides.top,   guides.top + 1         };
+  unsigned sizeX[3] = { guides.getLeft(), 1, guides.getRight() };
+  unsigned sizeY[3] = { guides.getTop(), 1, guides.getBottom() };
+  unsigned fromX[3] = { 0, guides.getLeft(), width - guides.getRight() };
+  unsigned fromY[3] = { 0, guides.getTop(), height - guides.getBottom() };
+  unsigned toX[3]   = { 0, guides.getLeft(), guides.getLeft() + 1 };
+  unsigned toY[3]   = { 0, guides.getTop(), guides.getTop() + 1 };
 
   for(char x = 0; x < 3; ++x)
   {
@@ -100,10 +99,10 @@ void saveNinePart(rain::guidelines guides, std::vector<unsigned char> &image,
     { "west",        "middle", "east"       },
     { "south-west",  "south",  "south-east" }
   };
-  unsigned sizeX[3] = { guides.left,  1,            guides.right           };
-  unsigned sizeY[3] = { guides.top,   1,            guides.bottom          };
-  unsigned fromX[3] = { 0,            guides.left,  width - guides.right   };
-  unsigned fromY[3] = { 0,            guides.top,   height - guides.bottom };
+  unsigned sizeX[3] = { guides.getLeft(), 1, guides.getRight() };
+  unsigned sizeY[3] = { guides.getTop(), 1, guides.getBottom() };
+  unsigned fromX[3] = { 0, guides.getLeft(), width - guides.getRight() };
+  unsigned fromY[3] = { 0, guides.getTop(), height - guides.getBottom() };
 
   for(char x = 0; x < 3; ++x)
   {
@@ -133,8 +132,8 @@ void saveThreePart(rain::guidelines guides, std::vector<unsigned char> &image,
   if(dir == HORIZONTAL)
   {
     const char * names[3] = { "left",  "middle", "right" };
-    unsigned sizeX[3] = { guides.left,  1,            guides.right           };
-    unsigned fromX[3] = { 0,            guides.left,  width - guides.right   };
+    unsigned sizeX[3] = { guides.getLeft(),  1, guides.getRight() };
+    unsigned fromX[3] = { 0, guides.getLeft(), width - guides.getRight() };
     
     for(char x = 0; x < 3; ++x)
     {
@@ -152,8 +151,8 @@ void saveThreePart(rain::guidelines guides, std::vector<unsigned char> &image,
   else if(dir == VERTICAL)
   {
     const char * names[3] = { "top",  "middle", "bottom" };
-    unsigned sizeY[3] = { guides.top,   1,            guides.bottom          };
-    unsigned fromY[3] = { 0,            guides.top,   height - guides.bottom };
+    unsigned sizeY[3] = { guides.getTop(), 1, guides.getBottom() };
+    unsigned fromY[3] = { 0, guides.getTop(), height - guides.getBottom() };
     
     for(char y = 0; y < 3; ++y)
     {
@@ -168,17 +167,6 @@ void saveThreePart(rain::guidelines guides, std::vector<unsigned char> &image,
       saveImage(output, width, sizeY[y], basename + "-" + names[y] + ".png");
     }
   }
-}
-
-// There are libraries to parse JSON for all languages and it's human readable
-std::string jsonFromGuidelines(rain::guidelines guides)
-{
-  std::ostringstream json;
-  json << '{' << "\"top\":"    << guides.top    << ',' <<
-                 "\"right\":"  << guides.right  << ',' <<
-                 "\"bottom\":" << guides.bottom << ',' <<
-                 "\"left\":"   << guides.left   << '}';
-  return json.str();
 }
 
 int main (int argc, const char * argv[])
@@ -198,10 +186,10 @@ int main (int argc, const char * argv[])
   }
   else
   {
-    rain::guidelines guides = rain::processFromCenter(
+    rain::guidelines guides(
       image, decoder.getWidth(), decoder.getHeight(), true, true
     );
-    std::cout << jsonFromGuidelines(guides) << "\n";
+    std::cout << guides.toJSON() << "\n";
   }
 }
 

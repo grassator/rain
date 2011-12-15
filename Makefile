@@ -8,7 +8,7 @@ ifeq ($(uname),Darwin)
 	CPPFLAGS = -O3
 endif
 
-OBJECTS = main.o lodepng.o
+OBJECTS = main.o lodepng.o guidelines.o
 
 all: rain
 
@@ -17,6 +17,8 @@ rain: $(OBJECTS)
 
 %.o: %.cpp Makefile
 	$(CPP) $(@:.o=.cpp) $(CPPFLAGS) -c
+
+guidelines.cpp: guidelines.h
 
 clean:
 	rm -f rain *.o
