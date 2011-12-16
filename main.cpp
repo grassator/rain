@@ -21,6 +21,16 @@ int main (int argc, const char * argv[])
     // Defining command line args
     TCLAP::CmdLine cmd("Auto-minimization tool for fluid images.", ' ', "1.0b");
 
+    TCLAP::ValueArg<unsigned> argX(
+      "x", "x-start", "X coordinate of starting point", false, 0, "integer"
+    );
+    cmd.add(argX);
+
+    TCLAP::ValueArg<unsigned> argY(
+      "y", "y-start", "Y coordinate of starting point", false, 0, "integer"
+    );
+    cmd.add(argY);
+
     TCLAP::SwitchArg argJSON("j", "json", "Output guidelines in JSON to stdout");
     cmd.add(argJSON);
 
@@ -72,10 +82,6 @@ int main (int argc, const char * argv[])
     LodePNG::Decoder decoder;
     decoder.decode(image, buffer.empty() ? 0 : &buffer[0], (unsigned)buffer.size());
 
-    // Convinience variables
-    unsigned width = decoder.getWidth();
-    unsigned height = decoder.getHeight();
-
     // Stopping here if something is wrong
     if(decoder.hasError())
     {
@@ -84,8 +90,14 @@ int main (int argc, const char * argv[])
       return decoder.getError();
     }
 
+    // Convinience variables
+    unsigned width = decoder.getWidth();
+    unsigned height = decoder.getHeight();
+    unsigned startX = argX.isSet() ? argX.getValue() : width / 2;
+    unsigned startY = argY.isSet() ? argY.getValue() : width / 2;
+
     // Getting guidelines from the image (for now always all)
-    guidelines guides(image, width, height, true, true);
+    guidelines guides(image, width, height, startX, startY, true, true);
 
     // Outputting JSON if requested
     if(argJSON.getValue())
