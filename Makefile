@@ -16,6 +16,9 @@ all: rain
 rain: $(OBJECTS)
 	$(CPP) $(OBJECTS) $(CPPFLAGS) $(INCLUDES) -o rain
 
+main.o: main.cpp functions.h Makefile
+	$(CPP) main.cpp $(CPPFLAGS) $(INCLUDES) -c
+
 %.o: %.cpp Makefile
 	$(CPP) $(@:.o=.cpp) $(CPPFLAGS) $(INCLUDES) -c
 

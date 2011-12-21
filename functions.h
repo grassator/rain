@@ -61,7 +61,7 @@ std::string basenameWithoutExtension(std::string filename)
 }
 
 // Writes raw image data to PNG file
-void saveImage(std::vector<unsigned char> &image, unsigned width, 
+void saveImage(std::vector<unsigned char> &image, unsigned width,
                unsigned height, std::string filename)
 {
   // Creating encoder
@@ -74,40 +74,66 @@ void saveImage(std::vector<unsigned char> &image, unsigned width,
   LodePNG::saveFile(ob, filename);
 }
 
-// Creates minimized version of image based on guides
-// to be used as border-image in css
-void saveMinimized(guidelines guides, std::vector<unsigned char> &image,
-                   unsigned width, unsigned height, std::string filename)
+// Resizes image based on guides doesn't check sizes
+void saveResized(guidelines guides, std::vector<unsigned char> &image,
+                 unsigned newWidth, unsigned newHeight,
+                 unsigned width, unsigned height, std::string filename)
 {
-  unsigned outputWidth = guides.getLeft() + guides.getRight() + 1;
-  unsigned outputHeight = guides.getTop() + guides.getBottom() + 1;
+  unsigned repeatX = newWidth - guides.getLeft() - guides.getRight();
+  unsigned repeatY = newHeight - guides.getTop() - guides.getBottom();
+
+  // Forcing new size to be appropriate
+  repeatX = repeatX < 1 ? 1 : repeatX;
+  repeatY = repeatY < 1 ? 1 : repeatY;
 
   // Preparing image output
   std::vector<unsigned char> minimized;
-  minimized.resize(outputWidth * outputHeight * 4);
+  minimized.resize(newWidth * newHeight * 4);
 
   unsigned sizeX[3] = { guides.getLeft(), 1, guides.getRight() };
   unsigned sizeY[3] = { guides.getTop(), 1, guides.getBottom() };
   unsigned fromX[3] = { 0, guides.getLeft(), width - guides.getRight() };
   unsigned fromY[3] = { 0, guides.getTop(), height - guides.getBottom() };
-  unsigned toX[3]   = { 0, guides.getLeft(), guides.getLeft() + 1 };
-  unsigned toY[3]   = { 0, guides.getTop(), guides.getTop() + 1 };
+  unsigned toX[3]   = { 0, guides.getLeft(), guides.getLeft() + repeatX };
+  unsigned toY[3]   = { 0, guides.getTop(), guides.getTop() + repeatY };
 
   for(char x = 0; x < 3; ++x)
   {
-    for(char y = 0; y < 3; ++y)
+    // For middle part there might be more than one iteration
+    unsigned countX = (x == 1) ? repeatX - 1 : 0;
+
+    for (unsigned rx = 0; rx <= countX; ++rx)
     {
-      rain::copyImagePart(
-        image, width,
-        minimized, outputWidth,
-        sizeX[x], sizeY[y],
-        fromX[x], fromY[y],
-        toX[x], toY[y]
-      );
+      for(char y = 0; y < 3; ++y)
+      {
+        // For middle part there might be more than one iteration
+        unsigned countY = (y == 1) ? repeatY - 1 : 0;
+
+        for (unsigned ry = 0; ry <= countY; ++ry)
+        {
+          rain::copyImagePart(
+            image, width,
+            minimized, newWidth,
+            sizeX[x], sizeY[y],
+            fromX[x], fromY[y],
+            toX[x] + rx, toY[y] + ry
+          );
+        }
+      }
     }
   }
 
-  saveImage(minimized, outputWidth, outputHeight, filename);
+  saveImage(minimized, newWidth, newHeight, filename);
+}
+
+// Creates minimized version of image based on guides
+// to be used as border-image in css
+void saveMinimized(guidelines guides, std::vector<unsigned char> &image,
+                   unsigned width, unsigned height, std::string filename)
+{
+  unsigned newWidth = guides.getLeft() + guides.getRight() + 1;
+  unsigned newHeight = guides.getTop() + guides.getBottom() + 1;
+  saveResized(guides, image, newWidth, newHeight, width, height, filename);
 }
 
 // Saves all 9 parts of an image for resizing in both directions
@@ -153,7 +179,7 @@ void saveThreePart(guidelines guides, std::vector<unsigned char> &image,
     const char * names[3] = { "left",  "middle", "right" };
     unsigned sizeX[3] = { guides.getLeft(),  1, guides.getRight() };
     unsigned fromX[3] = { 0, guides.getLeft(), width - guides.getRight() };
-    
+
     for(char x = 0; x < 3; ++x)
     {
       std::vector<unsigned char> output;
@@ -172,7 +198,7 @@ void saveThreePart(guidelines guides, std::vector<unsigned char> &image,
     const char * names[3] = { "top",  "middle", "bottom" };
     unsigned sizeY[3] = { guides.getTop(), 1, guides.getBottom() };
     unsigned fromY[3] = { 0, guides.getTop(), height - guides.getBottom() };
-    
+
     for(char y = 0; y < 3; ++y)
     {
       std::vector<unsigned char> output;
