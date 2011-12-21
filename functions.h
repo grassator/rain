@@ -79,12 +79,14 @@ void saveResized(guidelines guides, std::vector<unsigned char> &image,
                  unsigned newWidth, unsigned newHeight,
                  unsigned width, unsigned height, std::string filename)
 {
+  // Forcing new size to be appropriate
+  unsigned minWidth = guides.getLeft() + guides.getRight() + 1;
+  unsigned minHeight = guides.getTop() + guides.getBottom() + 1;
+  newWidth = newWidth < minWidth ? minWidth : newWidth;
+  newHeight = newHeight < minHeight ? minHeight : newHeight;
+
   unsigned repeatX = newWidth - guides.getLeft() - guides.getRight();
   unsigned repeatY = newHeight - guides.getTop() - guides.getBottom();
-
-  // Forcing new size to be appropriate
-  repeatX = repeatX < 1 ? 1 : repeatX;
-  repeatY = repeatY < 1 ? 1 : repeatY;
 
   // Preparing image output
   std::vector<unsigned char> minimized;

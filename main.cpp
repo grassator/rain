@@ -34,7 +34,14 @@ int main (int argc, const char * argv[])
     TCLAP::SwitchArg argJSON("j", "json", "Output guidelines in JSON to stdout");
     cmd.add(argJSON);
 
-    TCLAP::SwitchArg argMinimize("m", "minimize", "Minimizes image");
+    TCLAP::ValueArg<std::string> argResize(
+      "r", "resize", "Resizes to provided dimensions. Forced to be \
+at least the size of minimized image which is (left+right+1)x(top+bottom+1)",
+      false, "", "WIDTHxHEIGHT"
+    );
+    cmd.add(argResize);
+
+    TCLAP::SwitchArg argMinimize("m", "minimize", "Minimizes image\n\n  OR");
     cmd.add(argMinimize);
 
     // These modes are mutually exclusive
@@ -61,11 +68,42 @@ int main (int argc, const char * argv[])
     cmd.parse(argc, argv);
 
     // First we validate separate image arguments
-    if((argHorizontal.getValue() + argVertical.getValue() + argBoth.getValue()) > 1)
+    if((argHorizontal.isSet() + argVertical.isSet() + argBoth.isSet()) > 1)
     {
-      std::cerr << "error: you can't specify more than one "
+      std::cerr << "ERROR: you can't specify more than one "
       << "of the following flags: -l, -t, -b" << std::endl;
       return -1;
+    }
+
+    // Can't minimize and resize at the same
+    if((argMinimize.isSet() + argResize.isSet()) > 1)
+    {
+      std::cerr << "ERROR: you can't specify more than one "
+      << "of the following flags: -m, -r" << std::endl;
+      return -1;
+    }
+
+    unsigned resizeWidth = 0, resizeHeight = 0;
+    // Trying to parse new dimensions if provided
+    if(argResize.isSet())
+    {
+      std::stringstream size(argResize.getValue());
+      // Trying to get width
+      bool ok = !!(size >> resizeWidth);
+      if(ok)
+      {
+        // Now reading up to delimiter (x)
+        std::string tail;
+        std::getline(size, tail, 'x');
+        // If there's no garbage after width tail should be empty
+        ok = tail.empty() && !!(size >> resizeHeight);
+      }
+      if(!ok)
+      {
+        std::cerr << "ERROR: You have to specify dimensions in format WIDTHxHEIGHT"
+        << std::endl;
+        return -1;
+      }
     }
 
     // If we didn't get explicit basename assume it is the same as input one
@@ -106,9 +144,16 @@ int main (int argc, const char * argv[])
     }
 
     // Saving minimized image if requested
-    if(argMinimize.getValue())
+    if(argMinimize.isSet())
     {
       saveMinimized(guides, image, width, height, outputBasename + ".png");
+    }
+
+    // Saving resized image if requested
+    if(argResize.isSet())
+    {
+      saveResized(guides, image, resizeWidth, resizeHeight, width,
+                  height, outputBasename + ".png");
     }
 
     // Saving nine-part image if requested
