@@ -93,8 +93,10 @@ int main (int argc, const char * argv[])
     // Convinience variables
     unsigned width = decoder.getWidth();
     unsigned height = decoder.getHeight();
-    unsigned startX = argX.isSet() ? argX.getValue() : width / 2;
-    unsigned startY = argY.isSet() ? argY.getValue() : width / 2;
+    unsigned startX = argX.isSet() ? argX.getValue() : (width / 2);
+    unsigned startY = argY.isSet() ? argY.getValue() : (height / 2);
+
+    std::cout << "x: " << startX << "\ny: " << startY;
 
     // Getting guidelines from the image (for now always all)
     guidelines guides(image, width, height, startX, startY, true, true);
