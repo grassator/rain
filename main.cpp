@@ -44,6 +44,13 @@ at least the size of minimized image which is (left+right+1)x(top+bottom+1)",
     TCLAP::SwitchArg argMinimize("m", "minimize", "Minimizes image\n\n  OR");
     cmd.add(argMinimize);
 
+    TCLAP::SwitchArg argAndroid("a", "android", "Minimized Android 9-patch image\n\n  OR");
+    cmd.add(argAndroid);
+
+    TCLAP::SwitchArg argAndroidContent("c", "android-content",
+    "Minimized Android 9-patch image with content area\n\n  OR");
+    cmd.add(argAndroidContent);
+
     // These modes are mutually exclusive
     TCLAP::SwitchArg argHorizontal("l", "horizontal", "Creates 3 images horizontally");
     cmd.add(argHorizontal);
@@ -76,10 +83,10 @@ at least the size of minimized image which is (left+right+1)x(top+bottom+1)",
     }
 
     // Can't minimize and resize at the same
-    if((argMinimize.isSet() + argResize.isSet()) > 1)
+    if((argMinimize.isSet() + argResize.isSet() + argAndroid.isSet() + argAndroidContent.isSet()) > 1)
     {
       std::cerr << "ERROR: you can't specify more than one "
-      << "of the following flags: -m, -r" << std::endl;
+      << "of the following flags: -m, -r, -a, -c" << std::endl;
       return -1;
     }
 
@@ -141,6 +148,18 @@ at least the size of minimized image which is (left+right+1)x(top+bottom+1)",
     if(argJSON.getValue())
     {
       std::cout << guides.toJSON() << "\n";
+    }
+
+    // Saving android nine-patch image if requested
+    if(argAndroid.isSet())
+    {
+      saveNinePatch(guides, image, width, height, outputBasename + ".9.png");
+    }
+
+    // Saving android nine-patch image if requested
+    if(argAndroidContent.isSet())
+    {
+      saveNinePatch(guides, image, width, height, outputBasename + ".9.png", true);
     }
 
     // Saving minimized image if requested

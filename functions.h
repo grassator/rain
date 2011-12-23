@@ -74,10 +74,10 @@ void saveImage(std::vector<unsigned char> &image, unsigned width,
   LodePNG::saveFile(ob, filename);
 }
 
-// Resizes image based on guides doesn't check sizes
-void saveResized(guidelines guides, std::vector<unsigned char> &image,
-                 unsigned newWidth, unsigned newHeight,
-                 unsigned width, unsigned height, std::string filename)
+void getResizedWithOffset(guidelines guides, std::vector<unsigned char> &image,
+                          unsigned newWidth, unsigned newHeight,
+                          unsigned width, unsigned height,
+                          std::vector<unsigned char> &output)
 {
   // Forcing new size to be appropriate
   unsigned minWidth = guides.getLeft() + guides.getRight() + 1;
@@ -89,8 +89,7 @@ void saveResized(guidelines guides, std::vector<unsigned char> &image,
   unsigned repeatY = newHeight - guides.getTop() - guides.getBottom();
 
   // Preparing image output
-  std::vector<unsigned char> minimized;
-  minimized.resize(newWidth * newHeight * 4);
+  output.resize(newWidth * newHeight * 4);
 
   unsigned sizeX[3] = { guides.getLeft(), 1, guides.getRight() };
   unsigned sizeY[3] = { guides.getTop(), 1, guides.getBottom() };
@@ -115,7 +114,7 @@ void saveResized(guidelines guides, std::vector<unsigned char> &image,
         {
           rain::copyImagePart(
             image, width,
-            minimized, newWidth,
+            output, newWidth,
             sizeX[x], sizeY[y],
             fromX[x], fromY[y],
             toX[x] + rx, toY[y] + ry
@@ -124,8 +123,18 @@ void saveResized(guidelines guides, std::vector<unsigned char> &image,
       }
     }
   }
+}
 
-  saveImage(minimized, newWidth, newHeight, filename);
+// Resizes image based on guides doesn't check sizes
+void saveResized(guidelines guides, std::vector<unsigned char> &image,
+                 unsigned newWidth, unsigned newHeight,
+                 unsigned width, unsigned height, std::string filename)
+{
+  std::vector<unsigned char> resized;
+  getResizedWithOffset(
+   guides, image, newWidth, newHeight, width, height, resized
+  );
+  saveImage(resized, newWidth, newHeight, filename);
 }
 
 // Creates minimized version of image based on guides
@@ -136,6 +145,68 @@ void saveMinimized(guidelines guides, std::vector<unsigned char> &image,
   unsigned newWidth = guides.getLeft() + guides.getRight() + 1;
   unsigned newHeight = guides.getTop() + guides.getBottom() + 1;
   saveResized(guides, image, newWidth, newHeight, width, height, filename);
+}
+
+void fillPixel(std::vector<unsigned char> &image, unsigned width,
+               unsigned x,  unsigned y, unsigned char r = 0,
+               unsigned char g = 0, unsigned char b = 0, unsigned char a = 0)
+{
+  unsigned offset = (x + y * width)*4;
+  image[offset] = r;
+  image[++offset] = g;
+  image[++offset] = b;
+  image[++offset] = a;
+}
+
+// Creates minimized version of image based on guides
+// to be used as border-image in css
+void saveNinePatch(guidelines guides, std::vector<unsigned char> &image,
+                   unsigned width, unsigned height, std::string filename,
+                   bool addContent = false)
+{
+  unsigned minWidth = guides.getLeft() + guides.getRight() + 1;
+  unsigned minHeight = guides.getTop() + guides.getBottom() + 1;
+
+  std::vector<unsigned char> minimized;
+  getResizedWithOffset(
+   guides, image, minWidth, minHeight, width, height, minimized
+  );
+
+  unsigned nineWidth = minWidth + 2;
+  unsigned nineHeight = minHeight + 2;
+  std::vector<unsigned char> ninePatch;
+  ninePatch.resize(nineWidth * nineHeight * 4);
+
+  // Filling in transparent pixels in offset
+  for(unsigned y = 0; y < nineHeight; ++y)
+  {
+    fillPixel(ninePatch, nineWidth, 0, y);
+    fillPixel(ninePatch, nineWidth, nineWidth - 1, y);
+  }
+
+  for(unsigned x = 0; x < nineWidth; ++x)
+  {
+    fillPixel(ninePatch, nineWidth, x, 0);
+    fillPixel(ninePatch, nineWidth, x, nineHeight - 1);
+  }
+
+  // Adding black dots
+  fillPixel(ninePatch, nineWidth, guides.getLeft() + 1, 0, 0, 0, 0, 255);
+  fillPixel(ninePatch, nineWidth, 0, guides.getTop() + 1, 0, 0, 0, 255);
+  if(addContent)
+  {
+    fillPixel(ninePatch, nineWidth, guides.getLeft() + 1, nineHeight - 1, 0, 0, 0, 255);
+    fillPixel(ninePatch, nineWidth, nineWidth - 1, guides.getTop() + 1, 0, 0, 0, 255);
+  }
+
+  copyImagePart(
+    minimized, minWidth,
+    ninePatch, nineWidth,
+    minWidth, minHeight,
+    0, 0, 1, 1
+  );
+
+  saveImage(ninePatch, nineWidth, nineHeight, filename);
 }
 
 // Saves all 9 parts of an image for resizing in both directions
