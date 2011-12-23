@@ -19,7 +19,7 @@ int main (int argc, const char * argv[])
   try
   {
     // Defining command line args
-    TCLAP::CmdLine cmd("Auto-minimization tool for fluid images.", ' ', "1.0b");
+    TCLAP::CmdLine cmd("Auto-minimization tool for fluid images.", ' ', "1.1");
 
     TCLAP::ValueArg<unsigned> argX(
       "x", "x-start", "X coordinate of starting point", false, 0, "integer"
