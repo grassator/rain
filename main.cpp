@@ -6,7 +6,6 @@
 //
 
 #include <iostream>
-#include <libgen.h>
 #include "lodepng.h"
 #include "tclap/CmdLine.h"
 #include "functions.h"
