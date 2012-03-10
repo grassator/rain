@@ -58,7 +58,7 @@ void guidelines::init(
         i = (row + x) * 4;
         if(r != image[i] || g != image[++i] || b != image[++i] || a != image[++i])
         {
-          this->_left = x + 1;
+          this->_left = x;
           break;
         }
       }
@@ -77,8 +77,10 @@ void guidelines::init(
   }
   else
   {
-    this->_left = this->_right = startX;
+    this->_left = startX - 1;
+    this->_right = startX;
   }
+  this->_left++;
 
   // Vertical guidelines
   if(fluidHeight)
@@ -97,7 +99,7 @@ void guidelines::init(
         i = (width * y + x) * 4;
         if(r != image[i] || g != image[++i] || b != image[++i] || a != image[++i])
         {
-          this->_top = y + 1;
+          this->_top = y;
           break;
         }
       }
@@ -116,8 +118,10 @@ void guidelines::init(
   }
   else
   {
-    this->_top = this->_bottom = startY;
+    this->_top = startY - 1;
+    this->_bottom = startY;
   }
+  this->_top++;
 
   // It's easier to consume when guidelines are defined as offsets from bounds
   this->_right = width - this->_right;
